@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,20 +8,42 @@ import {
 } from "react-native";
 import RenderItem from "../components/RenderItem";
 import Formulario from "../components/Formulario";
+import AsyncStorage from "@react-native-community/async-storage";
 
 const Citas = () => {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [citas, setCitas] = useState([]);
 
+  useEffect(() => {
+    const obtenerCitasStorage = async () => {
+      try {
+        const citasStorage = await AsyncStorage.getItem("citas");
+        if (citasStorage) {
+          setCitas(JSON.parse(citasStorage));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    obtenerCitasStorage();
+  }, []);
+
   const eliminarPaciente = (id) => {
-    setCitas((citasActuales) => {
-      return citasActuales.filter((cita) => cita.id !== id);
-    });
+    const citasFiltradas = citas.filter((cita) => cita.id !== id);
+    setCitas(citasFiltradas);
+    guardarCitasStorage(JSON.stringify(citasFiltradas));
   };
 
   const mostrarFormulario = () => {
     setMostrarForm(!mostrarForm);
   };
+
+  const guardarCitasStorage = async (citasJSON) => {
+    try {
+      await AsyncStorage.setItem("citas", citasJSON);
+    } catch (error) {}
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Administrador de Citas</Text>
@@ -41,6 +63,7 @@ const Citas = () => {
             citas={citas}
             setCitas={setCitas}
             setMostrarForm={setMostrarForm}
+            guardarCitasStorage={guardarCitasStorage}
           />
         ) : (
           <>
